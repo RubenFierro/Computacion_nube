@@ -1,0 +1,43 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  if Vagrant.has_plugin? "vagrant-vbguest"
+    config.vbguest.no_install  = true
+    config.vbguest.auto_update = false
+    config.vbguest.no_remote   = true
+  end
+
+  #HAproxy
+  config.vm.define :vmhaproxy do |vmhaproxy|
+    vmhaproxy.vm.box = "bento/ubuntu-20.04"
+    vmhaproxy.vm.network :private_network, ip: "192.168.100.50"
+    vmhaproxy.vm.hostname = "vmhaproxy"
+    vmhaproxy.vm.provision :shell, path: "vmhaproxy.sh"
+    vmhaproxy.vm.provider "virtualbox" do |v|
+      v.name = "vmhaproxy"
+      v.memory = 1024
+      v.cpus = 1
+    end
+  end
+
+
+  #VMWEBSERVER1 Y VMWEBSERVER2
+  NodeCount = 2
+
+  (1..NodeCount).each do |i|
+    config.vm.define "vmwebserver#{i}" do |vmwebserver|
+      vmwebserver.vm.box = "bento/ubuntu-20.04"
+      vmwebserver.vm.hostname = "vmwebserver#{i}"
+      vmwebserver.vm.network "private_network", ip: "192.168.100.5#{i}"
+      vmwebserver.vm.provision :shell, path: "vmwebserver.sh", args: i
+      vmwebserver.vm.provider "virtualbox" do |v|
+        v.name = "vmwebserver#{i}"
+        v.memory = 1024
+        v.cpus = 1
+      end
+    end
+  end
+
+end
